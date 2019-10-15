@@ -3,7 +3,6 @@ package security
 import (
 	"bytes"
 	"os/exec"
-	"os/user"
 	"runtime"
 	"strings"
 
@@ -42,25 +41,25 @@ func FirewallStealthState() string {
 
 /* -------------------- Unexported Functions -------------------- */
 
-func firewallStateLinux() string { // might be very Ubuntu specific
-	user, _ := user.Current()
+func firewallStateLinux() string {
+/* This function requires UFW, and configuration to allow "ufw status"
+   without a sudo password (unless running as root). See
+   https://wtfutil.com/modules/security/#for-linux-firewall-users for
+   more details.
+*/
 
-	if strings.Contains(user.Username, "root") {
-		cmd := exec.Command("ufw", "status")
+	cmd := exec.Command("sudo", "ufw", "status")
 
-		var o bytes.Buffer
-		cmd.Stdout = &o
-		if err := cmd.Run(); err != nil {
-			return "[red]NA[white]"
-		}
+	var o bytes.Buffer
+	cmd.Stdout = &o
+	if err := cmd.Run(); err != nil {
+		return "[red]Config Needed[white]"
+	}
 
-		if strings.Contains(o.String(), "inactive") {
-			return "[red]Disabled[white]"
-		} else {
-			return "[green]Enabled[white]"
-		}
+	if strings.Contains(o.String(), "inactive") {
+		return "[red]Disabled[white]"
 	} else {
-		return "[red]N/A[white]"
+		return "[green]Enabled[white]"
 	}
 }
 
